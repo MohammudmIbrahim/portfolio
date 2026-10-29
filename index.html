@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mohammud Ibrahim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #000;
+    --fg: #ededed;
+    --muted: rgba(237, 237, 237, 0.58);
+    --accent: #f2a65a;
+    --line: rgba(237, 237, 237, 0.14);
+  }
+  :root[data-theme="light"] {
+    --bg: #eef3ec;
+    --fg: #16302a;
+    --muted: rgba(22, 48, 42, 0.62);
+    --accent: #c4561f;
+    --line: rgba(22, 48, 42, 0.14);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.65 "DM Sans", system-ui, sans-serif;
+    transition: background 0.4s, color 0.4s;
+  }
+  canvas#pond { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 2;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 22px clamp(16px, 5vw, 72px);
+    font-size: 14px; pointer-events: none;
+  }
+  nav > * { pointer-events: auto; }
+  .mark { font-family: Fraunces, serif; font-size: 20px; font-weight: 600; color: var(--fg); text-decoration: none; }
+  .mark span { color: var(--accent); }
+  nav .links { display: flex; gap: 22px; align-items: center; }
+  nav a, nav button { color: var(--muted); text-decoration: none; background: none; border: 0; font: inherit; cursor: pointer; padding: 4px 0; }
+  nav a:hover, nav button:hover { color: var(--fg); }
+  /* Sun to switch to light, moon to switch to dark (Phosphor, bold weight). */
+  #theme { display: flex; }
+  #theme svg { width: 15px; height: 15px; }
+  #theme .icon-moon, :root[data-theme="light"] #theme .icon-sun { display: none; }
+  :root[data-theme="light"] #theme .icon-moon { display: block; }
+
+  main {
+    position: relative; z-index: 1; height: 100dvh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 0 clamp(16px, 9vw, 160px);
+    pointer-events: none;
+  }
+  .intro { max-width: 30rem; pointer-events: auto; animation: rise 0.7s ease both; }
+  .kicker { font: 500 12px "JetBrains Mono", monospace; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin: 0 0 14px; }
+  h1 { font: 600 clamp(36px, 5vw, 58px)/1.05 Fraunces, serif; margin: 0 0 18px; letter-spacing: -0.01em; }
+  .intro p { margin: 0 0 10px; color: var(--muted); }
+  .intro p strong { color: var(--fg); font-weight: 500; }
+  .intro a { color: var(--fg); text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 3px; }
+  .socials { display: flex; gap: 18px; margin-top: 22px; font-size: 14px; }
+  .socials a { text-decoration: none; color: var(--muted); }
+  .socials a:hover { color: var(--fg); }
+  .legend {
+    position: fixed; z-index: 1; right: clamp(16px, 5vw, 72px); bottom: 24px;
+    font: 500 12px "JetBrains Mono", monospace; color: var(--muted); margin: 0;
+  }
+  .legend b { color: var(--fg); font-weight: 500; }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+  @media (max-width: 640px) {
+    body { font-size: 15px; }
+    main { justify-content: flex-end; padding-bottom: 72px; }
+    .legend { left: 16px; right: auto; }
+  }
+</style>
+</head>
+<body>
+<canvas id="pond" aria-hidden="true"></canvas>
+
+<nav>
+  <a class="mark" href="./" data-avoid>mi<span>.</span></a>
+  <div class="links" data-avoid>
+    <a href="projects/">projects</a>
+    <a href="writing/">writing</a>
+    <button id="theme" type="button" aria-label="Toggle theme">
+      <svg class="icon-sun" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M116,36V20a12,12,0,0,1,24,0V36a12,12,0,0,1-24,0Zm80,92a68,68,0,1,1-68-68A68.07,68.07,0,0,1,196,128Zm-24,0a44,44,0,1,0-44,44A44.05,44.05,0,0,0,172,128ZM51.51,68.49a12,12,0,1,0,17-17l-12-12a12,12,0,0,0-17,17Zm0,119-12,12a12,12,0,0,0,17,17l12-12a12,12,0,1,0-17-17ZM196,72a12,12,0,0,0,8.49-3.51l12-12a12,12,0,0,0-17-17l-12,12A12,12,0,0,0,196,72Zm8.49,115.51a12,12,0,0,0-17,17l12,12a12,12,0,0,0,17-17ZM48,128a12,12,0,0,0-12-12H20a12,12,0,0,0,0,24H36A12,12,0,0,0,48,128Zm80,80a12,12,0,0,0-12,12v16a12,12,0,0,0,24,0V220A12,12,0,0,0,128,208Zm108-92H220a12,12,0,0,0,0,24h16a12,12,0,0,0,0-24Z"/></svg>
+      <svg class="icon-moon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M236.37,139.4a12,12,0,0,0-12-3A84.07,84.07,0,0,1,119.6,31.59a12,12,0,0,0-15-15A108.86,108.86,0,0,0,49.69,55.07,108,108,0,0,0,136,228a107.09,107.09,0,0,0,64.93-21.69,108.86,108.86,0,0,0,38.44-54.94A12,12,0,0,0,236.37,139.4Zm-49.88,47.74A84,84,0,0,1,68.86,69.51,84.93,84.93,0,0,1,92.27,48.29Q92,52.13,92,56A108.12,108.12,0,0,0,200,164q3.87,0,7.71-.27A84.79,84.79,0,0,1,186.49,187.14Z"/></svg>
+    </button>
+  </div>
+</nav>
+
+<main>
+  <section class="intro" data-avoid>
+    <p class="kicker">welcome to the pond</p>
+    <h1>Mohammud Ibrahim</h1>
+    <p><strong>Software engineer</strong> who builds AI agents and small, delightful things on the web.</p>
+    <p>Currently working on <a href="https://github.com/Mmibrahim2/Foodie-AI-Agent">Foodie AI Agent</a>, a smarter way to decide what to eat.</p>
+    <div class="socials">
+      <a href="https://github.com/Mmibrahim2">github</a><a href="https://www.linkedin.com/in/mohammud-ibrahim-587b9a199/">linkedin</a><a href="mailto:Mohammud.ibrahim26@gmail.com">email</a>
+    </div>
+  </section>
+</main>
+
+<p class="legend" data-avoid aria-hidden="true"><b>koi</b> · <b>jellyfish</b> · <b>manta</b> — click the water to feed</p>
+
+<script>
+(() => {
+  // ── helpers ──────────────────────────────────────────────
+  const TAU = Math.PI * 2;
+  const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const wrapAngle = (a) => { a %= TAU; return a > Math.PI ? a - TAU : a < -Math.PI ? a + TAU : a; };
+  const hash = (a, b, c) => {
+    let h = Math.imul(a | 0, 0x27d4eb2d) ^ Math.imul(b | 0, 0x165667b1) ^ Math.imul(c | 0, 0x9e3779b1);
+    h = Math.imul(h ^ (h >>> 15), 0x85ebca6b); h ^= h >>> 13;
+    return (h >>> 0) / 4294967296;
+  };
+  const rgb = (c) => `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
+  const mixC = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
+  const pick = (list) => list[Math.floor(Math.random() * list.length)];
+
+  // Colours are written for the black pond; the light theme darkens them by `tone` so they read on a pale page.
+  const THEMES = {
+    dark: {
+      bg: [0, 0, 0], ink: [20, 20, 24], fin: [200, 206, 214], water: [200, 214, 236], food: [242, 166, 90],
+      tone: 1, alpha: 0.9, glow: 0.18,
+    },
+    light: {
+      bg: [238, 243, 236], ink: [30, 30, 36], fin: [120, 138, 130], water: [40, 84, 72], food: [176, 100, 36],
+      tone: 0.74, alpha: 0.92, glow: 0.06,
+    },
+  };
+  let theme = THEMES.dark;
+  const tone = (c) => (theme.tone === 1 ? c : c.map((v) => v * theme.tone));
+
+  // ── species ──────────────────────────────────────────────
+  // Classic koi: kohaku (red on white), sanke (kohaku plus small black spots), tancho (a single red crown).
+  const KOI_VARIETIES = [['kohaku', 3], ['sanke', 2], ['tancho', 1]];
+  const KOI_WHITE = [238, 230, 220], KOI_RED = [232, 76, 42], KOI_BLACK = [84, 82, 98];
+  function pickVariety() {
+    let r = Math.random() * KOI_VARIETIES.reduce((sum, [, w]) => sum + w, 0);
+    for (const [name, w] of KOI_VARIETIES) if ((r -= w) <= 0) return name;
+    return 'kohaku';
+  }
+  const JELLY_LOOKS = [
+    { core: [214, 230, 236], glow: [122, 168, 186] },
+    { core: [236, 218, 228], glow: [182, 136, 164] },
+    { core: [224, 218, 238], glow: [148, 138, 186] },
+    { core: [238, 230, 214], glow: [186, 160, 124] },
+  ];
+  const MANTA_LOOK = { back: [72, 96, 132], edge: [190, 206, 226], spot: [240, 246, 250] };
+
+  const SPECIES = {
+    koi: {
+      segs: 16, maxBend: 0.18, reach: 0.26, turn: 0.7, eats: true, curiosity: 1, bursty: true,
+      depth: [0.55, 1], wave: 0.045, avoid: 0.45,
+      cruise: (L) => 12 + L * 0.05,
+      // Markings sit in body space: t along the spine, v across it, both as fractions of length.
+      look: () => {
+        const variety = pickVariety(), red = [], black = [];
+        if (variety === 'tancho') red.push({ t: 0.11, v: 0, rt: 0.05, rv: 0.055 });
+        else {
+          // Usually a red cap on the head, then two or three saddles spaced down the back.
+          if (Math.random() < 0.75) red.push({ t: 0.1, v: rand(-0.015, 0.015), rt: rand(0.055, 0.085), rv: 0.11 });
+          const n = 2 + Math.floor(Math.random() * 2), span = 0.42 / n;
+          for (let j = 0; j < n; j++) {
+            red.push({ t: 0.25 + span * (j + 0.5) + rand(-0.15, 0.15) * span, v: rand(-0.025, 0.025), rt: span * rand(0.32, 0.44), rv: rand(0.09, 0.14) });
+          }
+          if (variety === 'sanke') for (let j = 0, m = 4 + Math.floor(Math.random() * 3); j < m; j++) black.push({ t: rand(0.24, 0.68), v: rand(-0.08, 0.08), rt: 0.022, rv: 0.026 });
+        }
+        return { variety, red, black };
+      },
+    },
+    jelly: {
+      segs: 14, maxBend: 0.3, reach: 0.26, turn: 0.5, eats: false, curiosity: 0, bursty: false, pulse: true,
+      depth: [0.6, 1], wave: 0.02, avoid: 0.4,
+      cruise: (L) => 10 + L * 0.05,
+      look: () => pick(JELLY_LOOKS),
+    },
+    manta: {
+      segs: 12, maxBend: 0.06, reach: 0.72, turn: 0.4, eats: false, curiosity: 0, bursty: false,
+      depth: [0.5, 0.72], wave: 0.012, avoid: 0.8,
+      cruise: (L) => 14 + L * 0.04,
+      look: () => MANTA_LOOK,
+    },
+  };
+
+  function makeFish(id, kind, W, H, len) {
+    const sp = SPECIES[kind];
+    const x = rand(W * 0.1, W * 0.9), y = rand(H * 0.1, H * 0.9), dir = rand(0, TAU);
+    const pts = [];
+    for (let i = 0; i < sp.segs; i++) pts.push({ x: x - Math.cos(dir) * i * len / (sp.segs - 1), y: y - Math.sin(dir) * i * len / (sp.segs - 1) });
+    return {
+      id, kind, sp, len, pts, dir, speed: sp.cruise(len) * 0.6, wobble: rand(0, TAU), wander: 0, flap: rand(0, TAU),
+      depth: rand(...sp.depth), depthGoal: rand(...sp.depth), nextDepth: rand(5, 15),
+      burst: 0, burstEnd: 0, nextBurst: rand(0, 3), target: null, scare: 0, fleeX: 0, fleeY: 0, curious: rand(0.4, 1) * sp.curiosity,
+      look: sp.look(id),
+    };
+  }
+
+  // ── world ────────────────────────────────────────────────
+  const canvas = document.getElementById('pond');
+  const ctx = canvas.getContext('2d');
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  let W = 0, H = 0, dpr = 1, cw = 10, chh = 12, cols = 0, rows = 0;
+  let fish = [], food = [], ripples = [], avoid = [], time = 0;
+  let wake = new Float32Array(0), wakeTmp = new Float32Array(0), occupied = new Uint8Array(0);
+  const mouse = { x: -1e4, y: -1e4, speed: 0, on: false, t: 0 };
+
+  function resize() {
+    W = innerWidth; H = innerHeight; dpr = Math.min(devicePixelRatio || 1, 2);
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    cw = clamp(Math.round(W / 130), 8, 12); chh = cw + 3;
+    cols = Math.ceil(W / cw); rows = Math.ceil(H / chh);
+    wake = new Float32Array(cols * rows); wakeTmp = new Float32Array(cols * rows); occupied = new Uint8Array(cols * rows);
+    measure();
+    if (!fish.length) populate();
+  }
+
+  let nextId = 1;
+  const baseLength = () => clamp(Math.min(W, H) * 0.38, 130, 320);
+  function populate() {
+    const area = W * H, base = baseLength();
+    const add = (kind, n, lo, hi) => { for (let i = 0; i < n; i++) fish.push(makeFish(nextId++, kind, W, H, base * rand(lo, hi))); };
+    add('manta', area > 500000 ? 2 : 1, 0.7, 0.9);
+    add('koi', clamp(Math.round(area / 200000), 3, 7), 0.5, 1);
+    add('jelly', clamp(Math.round(area / 300000), 3, 5), 0.6, 0.85);
+  }
+
+  function measure() {
+    avoid = [...document.querySelectorAll('[data-avoid]')].map((el) => {
+      const r = el.getBoundingClientRect();
+      return { l: r.left, t: r.top, r: r.right, b: r.bottom };
+    });
+  }
+
+  function feed(x, y) {
+    ripples.push({ x, y, t: time, s: 0.5 });
+    const n = Math.min(6, 24 - food.length);
+    for (let i = 0; i < n; i++) {
+      const a = rand(0, TAU), r = Math.sqrt(Math.random()) * 30;
+      food.push({ x: x + Math.cos(a) * r, y: y + Math.sin(a) * r, t: time, land: rand(0.15, 0.4), landed: false, vx: Math.cos(a) * 4, vy: Math.sin(a) * 4 });
+    }
+  }
+
+  function nearestFood(k) {
+    let best = null, bd = (k.len * 2 + 300) ** 2;
+    for (const f of food) {
+      if (!f.landed) continue;
+      const d = (f.x - k.pts[0].x) ** 2 + (f.y - k.pts[0].y) ** 2;
+      if (d < bd) { bd = d; best = f; }
+    }
+    return best;
+  }
+
+  function stepFish(k, dt) {
+    const sp = k.sp, head = k.pts[0], segs = sp.segs;
+    let sx = Math.cos(k.dir), sy = Math.sin(k.dir);
+
+    k.wander = clamp(k.wander + (Math.random() - 0.5) * dt * (k.kind === 'manta' ? 0.8 : 2), -1, 1);
+    sx += Math.cos(k.dir + k.wander) * 0.5; sy += Math.sin(k.dir + k.wander) * 0.5;
+
+    if (sp.eats) {
+      if (k.target && !food.includes(k.target)) k.target = null;
+      k.target = k.target || nearestFood(k);
+    }
+    const md = Math.hypot(mouse.x - head.x, mouse.y - head.y);
+    if (!k.target && mouse.on && mouse.speed > 1200 && md < k.len) { k.scare = 1; k.fleeX = mouse.x; k.fleeY = mouse.y; }
+    k.scare = Math.max(0, k.scare - dt * 0.6);
+
+    let mode = 'cruise';
+    if (k.scare > 0.3) {
+      mode = 'flee';
+      const fx = head.x - k.fleeX, fy = head.y - k.fleeY, fd = Math.hypot(fx, fy) || 1;
+      sx += (fx / fd) * 4; sy += (fy / fd) * 4;
+    } else if (k.target) {
+      mode = 'eat';
+      const d = Math.hypot(k.target.x - head.x, k.target.y - head.y) || 1;
+      sx += (k.target.x - head.x) / d * 3; sy += (k.target.y - head.y) / d * 3;
+    } else if (k.curious && mouse.on && md < 280) {
+      mode = 'curious';
+      const w = k.curious * (1 - md / 280) * 2, near = clamp(md / (k.len * 0.6), 0, 1);
+      const ux = (mouse.x - head.x) / (md || 1), uy = (mouse.y - head.y) / (md || 1);
+      sx += (ux * near - uy * (1 - near)) * w; sy += (uy * near + ux * (1 - near)) * w;
+    }
+
+    for (const o of fish) {
+      if (o === k) continue;
+      const step = Math.max(1, Math.floor(o.sp.segs / 5));
+      for (let i = 0; i < o.sp.segs; i += step) {
+        const dx = head.x - o.pts[i].x, dy = head.y - o.pts[i].y, d = Math.hypot(dx, dy);
+        const range = (k.len * sp.reach + o.len * o.sp.reach) * (mode === 'eat' ? 0.5 : 1) + 10;
+        if (d < range && d > 0.01) { sx += dx / d * (1 - d / range) * 2; sy += dy / d * (1 - d / range) * 2; }
+      }
+    }
+
+    for (const b of avoid) {
+      const dx = head.x - clamp(head.x, b.l, b.r), dy = head.y - clamp(head.y, b.t, b.b);
+      const d = Math.hypot(dx, dy), m = k.len * sp.avoid;
+      if (d >= m) continue;
+      const w = (1 - d / m) * (mode === 'cruise' ? 2 : 0.5);
+      if (d < 0.01) { sy += head.y < (b.t + b.b) / 2 ? -w : w; continue; }
+      sx += dx / d * w; sy += dy / d * w;
+    }
+
+    const out = Math.max(-head.x, head.x - W, -head.y, head.y - H);
+    if (out > -k.len * 0.2) {
+      const w = clamp((out + k.len * 0.2) / (k.len * 0.5), 0, 1) * 3.5;
+      const dx = W / 2 - head.x, dy = H / 2 - head.y, d = Math.hypot(dx, dy) || 1;
+      sx += dx / d * w; sy += dy / d * w;
+    }
+
+    const turnRate = sp.turn * { flee: 3, eat: 3, curious: 1.6, cruise: 1 }[mode] * Math.min(1, k.speed / k.len * 5);
+    k.dir += clamp(wrapAngle(Math.atan2(sy, sx) - k.dir), -turnRate * dt, turnRate * dt);
+
+    // Koi swim in bursts and glide; mantas flap steadily; jellyfish surge forward on each pulse of the bell.
+    if (sp.bursty && time > k.nextBurst) { k.burstEnd = time + rand(0.8, 1.6); k.nextBurst = k.burstEnd + rand(1.5, 4); }
+    const bursting = !sp.bursty || mode === 'flee' || mode === 'eat' || time < k.burstEnd;
+    k.burst = lerp(k.burst, bursting ? 1 : 0, Math.min(1, dt * 3));
+    const cruise = sp.cruise(k.len);
+    const goal = sp.bursty
+      ? cruise * { flee: 3.2, eat: 2.2, curious: 1.5, cruise: bursting ? 1.3 : 0.45 }[mode]
+      : sp.pulse
+        ? cruise * (0.25 + 1.6 * Math.max(0, Math.sin(k.flap))) * (mode === 'flee' ? 1.8 : 1)
+        : cruise * (mode === 'flee' ? 2.2 : 1);
+    k.speed = lerp(k.speed, goal, Math.min(1, dt * (bursting ? 1.6 : 0.35)));
+    k.wobble += dt * (0.6 + k.burst * (2 + k.speed / 12));
+    k.flap += dt * (1.1 + k.speed / 40);
+
+    if (time > k.nextDepth) { k.depthGoal = rand(...sp.depth); k.nextDepth = time + rand(8, 18); }
+    k.depth = lerp(k.depth, mode === 'eat' ? 1 : k.depthGoal, dt * 0.3);
+
+    head.x += Math.cos(k.dir) * k.speed * dt;
+    head.y += Math.sin(k.dir) * k.speed * dt;
+
+    const seg = k.len / (segs - 1);
+    let prev = k.dir;
+    for (let i = 1; i < segs; i++) {
+      const a = k.pts[i - 1], p = k.pts[i];
+      let ang = Math.atan2(a.y - p.y, a.x - p.x);
+      ang = prev + clamp(wrapAngle(ang - prev), -sp.maxBend, sp.maxBend);
+      p.x = a.x - Math.cos(ang) * seg; p.y = a.y - Math.sin(ang) * seg;
+      prev = ang;
+    }
+
+    if (sp.eats) {
+      const mouth = k.len * 0.08 + 6, before = food.length;
+      food = food.filter((f) => !f.landed || Math.hypot(f.x - head.x, f.y - head.y) > mouth);
+      if (food.length < before) { ripples.push({ x: head.x, y: head.y, t: time, s: 0.7 }); k.target = null; }
+    }
+
+    const tail = k.pts[segs - 2], ci = cellAt(tail.x, tail.y);
+    if (ci >= 0) wake[ci] = Math.min(1.5, wake[ci] + 0.03 + k.speed * 0.001);
+  }
+
+  function step(dt) {
+    time += dt;
+    mouse.speed *= Math.exp(-dt * 8);
+    for (const k of fish) stepFish(k, dt);
+    for (const f of food) {
+      if (!f.landed) {
+        if (time - f.t > f.land) { f.landed = true; ripples.push({ x: f.x, y: f.y, t: time, s: 0.15 }); }
+        continue;
+      }
+      f.vx *= 0.995; f.vy *= 0.995; f.x += f.vx * dt; f.y += f.vy * dt;
+    }
+    food = food.filter((f) => time - f.t < 14);
+    ripples = ripples.filter((r) => time - r.t < 2.5 + r.s * 1.5);
+  }
+
+  // ── shapes: each returns [glyph, colour, alpha] for a point in body space, or null ──
+  // t runs 0 at the nose to 1 at the tail tip; off is the signed distance from the spine, as a fraction of length.
+  const SCALES = '●◍○•:·';
+  const scaleGlyph = (light, k, c, r) => SCALES[clamp(Math.floor((1 - light) * 4 + hash(k.id, c, r) * 1.5), 0, SCALES.length - 1)];
+
+  function koiWidth(t) {
+    if (t < 0.15) return 0.14 * Math.sqrt(t / 0.15);
+    if (t < 0.35) return 0.14;
+    if (t < 0.78) return lerp(0.14, 0.035, (t - 0.35) / 0.43);
+    return 0;
+  }
+  function koiShape(k, t, off, a, c, r) {
+    const w = koiWidth(t), flare = 1 - 0.3 * k.burst + 0.15 * Math.sin(k.wobble * 1.3);
+    if (w > 0 && a <= w) {
+      const across = a / w, light = Math.sqrt(1 - across * across);
+      if (t > 0.05 && t < 0.09 && across > 0.45 && across < 0.85) return ['•', theme.ink, 1];
+      // The belly edge and tail stalk stay white, which frames the markings; patch edges are a little ragged.
+      let base = KOI_WHITE;
+      if (across < 0.9 && t < 0.74) {
+        const wob = (hash(k.id, Math.round(t * 40), Math.round(off * 60)) - 0.5) * 0.35;
+        const inside = (m) => ((t - m.t) / m.rt) ** 2 + ((off - m.v) / m.rv) ** 2 < 1 + wob;
+        if (k.look.black.some(inside)) base = KOI_BLACK;
+        else if (k.look.red.some(inside)) base = KOI_RED;
+      }
+      base = tone(base);
+      return [scaleGlyph(light, k, c, r), mixC(theme.bg, base, 0.7 + 0.3 * light), across > 0.85 ? 0.6 : 1, true];
+    }
+    if (t > 0.72) {
+      const fan = (0.03 + 0.16 * ((t - 0.72) / 0.28)) * flare;
+      if (a < fan && t < 0.9 + 0.1 * (a / fan)) return [a / fan > 0.5 ? (off > 0 ? '\\' : '/') : '-', theme.fin, 0.55];
+    } else if (t > 0.15 && t < 0.3) {
+      const reach = koiWidth(t) + 0.1 * Math.sin(((t - 0.15) / 0.15) * Math.PI) * flare;
+      if (a < reach) return ['.', theme.fin, 0.6];
+    } else if (t < 0.02 && a < 0.06 && a > 0.035) return ['~', theme.fin, 0.5];
+    return null;
+  }
+
+  // Jellyfish: a glowing bell that squeezes as it pulses, frilly arms under it, and long drifting tentacles.
+  function jellyShape(k, t, off, a, c, r) {
+    const L = k.look, squeeze = Math.max(0, Math.sin(k.flap));
+    const lb = 0.14 * (1 + 0.15 * squeeze), wb = 0.2 * (1 - 0.2 * squeeze), tc = lb;
+    if (t < tc + lb * 0.45) {
+      const rel = Math.sqrt(((t - tc) / lb) ** 2 + (a / wb) ** 2);
+      if (rel < 1) {
+        const glyph = rel < 0.35 ? '●' : rel < 0.65 ? '◍' : rel < 0.88 ? '○' : '·';
+        return [glyph, tone(mixC(L.core, L.glow, rel)), rel > 0.88 ? 0.7 : 1, rel < 0.88];
+      }
+    }
+    const t0 = tc + lb * 0.4;
+    if (t < t0) return null;
+    const u = (t - t0) / (1 - t0), half = (cw * 0.55) / k.len;
+    if (u < 0.35 && a < 0.04 * (1 + 0.4 * Math.sin(t * 30 - time * 4 + k.id))) return ['≈', tone(L.glow), 0.75];
+    for (let i = 0; i < 5; i++) {
+      const o = ((i - 2) / 2) * wb * 0.8 * (1 - 0.35 * u) + 0.022 * Math.sin(t * 14 - time * 3 + i * 1.7 + k.id);
+      if (Math.abs(off - o) < half) return [u > 0.65 ? '·' : ':', tone(mixC(L.glow, L.core, 0.35)), 1 - 0.55 * u];
+    }
+    return null;
+  }
+
+  function mantaWing(t) {
+    if (t < 0.06) return 0;
+    if (t < 0.3) return 0.62 * Math.pow((t - 0.06) / 0.24, 0.6);
+    if (t < 0.55) return lerp(0.62, 0.04, Math.pow((t - 0.3) / 0.25, 0.8));
+    return 0;
+  }
+  // Mantas are a wide diamond of wing with horn-like fins at the front and a whip of a tail.
+  function mantaShape(k, t, off, a, c, r) {
+    const L = k.look, flap = Math.sin(k.flap);
+    const span = Math.max(mantaWing(t) * (0.86 + 0.14 * Math.cos(k.flap)), t < 0.55 ? 0.09 : 0);
+    if (t <= 0.55 && a <= span) {
+      const rel = a / span;
+      // Wingtips catch the light as they lift and darken as they dip.
+      const shade = clamp(rel * 0.55 + 0.35 * flap * rel * rel, 0, 1);
+      let col = tone(mixC(L.back, L.edge, shade)), glyph = rel < 0.2 ? '●' : rel < 0.45 ? '◍' : rel < 0.7 ? '○' : rel < 0.9 ? '•' : '·';
+      if (rel > 0.15 && rel < 0.6 && t > 0.15 && t < 0.42 && hash(k.id, Math.round(t * 30), Math.round(off * 30)) < 0.07) { glyph = '•'; col = tone(L.spot); }
+      if (t > 0.07 && t < 0.11 && rel > 0.6 && rel < 1 && span < 0.2) return ['•', theme.ink, 1];
+      return [glyph, col, rel > 0.9 ? 0.6 : 1, rel < 0.9];
+    }
+    if (t < 0.07 && a > 0.06 && a < 0.12) return ['"', tone(L.back), 0.8];
+    if (t > 0.55 && a < (cw * 0.7) / k.len) return ['·', tone(L.back), 0.75];
+    return null;
+  }
+  const SHAPES = { koi: koiShape, jelly: jellyShape, manta: mantaShape };
+
+  // ── rendering ────────────────────────────────────────────
+  const cellAt = (x, y) => {
+    const c = Math.floor(x / cw), r = Math.floor(y / chh);
+    return c < 0 || r < 0 || c >= cols || r >= rows ? -1 : r * cols + c;
+  };
+  function put(c, r, ch, color, alpha) {
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color;
+    ctx.fillText(ch, c * cw + cw / 2, r * chh + chh / 2);
+  }
+
+  function locate(k, spine, x, y) {
+    let best = Infinity, bt = 0, bs = 0;
+    const n = spine.length;
+    for (let i = 0; i < n - 1; i++) {
+      const a = spine[i], b = spine[i + 1];
+      const ex = b.x - a.x, ey = b.y - a.y, L2 = ex * ex + ey * ey || 1;
+      const u = clamp(((x - a.x) * ex + (y - a.y) * ey) / L2, 0, 1);
+      const px = a.x + ex * u - x, py = a.y + ey * u - y, d = px * px + py * py;
+      if (d < best) { best = d; bt = (i + u) / (n - 1); bs = Math.sign(ex * (y - a.y) - ey * (x - a.x)) || 1; }
+    }
+    return { t: bt, off: Math.sqrt(best) * bs / k.len };
+  }
+
+  function drawFish(k) {
+    const segs = k.sp.segs, shape = SHAPES[k.kind];
+    const spine = k.pts.map((p, i) => {
+      const t = i / (segs - 1);
+      const a = k.pts[Math.max(0, i - 1)], b = k.pts[Math.min(segs - 1, i + 1)];
+      let nx = -(a.y - b.y), ny = a.x - b.x; const nl = Math.hypot(nx, ny) || 1; nx /= nl; ny /= nl;
+      const off = k.len * k.sp.wave * t * t * (0.25 + k.burst) * Math.sin(k.wobble * 2 - t * 5);
+      return { x: p.x + nx * off, y: p.y + ny * off };
+    });
+
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const p of spine) { x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y); }
+    const pad = k.len * k.sp.reach;
+    const c0 = Math.max(0, Math.floor((x0 - pad) / cw)), c1 = Math.min(cols - 1, Math.floor((x1 + pad) / cw));
+    const r0 = Math.max(0, Math.floor((y0 - pad) / chh)), r1 = Math.min(rows - 1, Math.floor((y1 + pad) / chh));
+    const fade = theme.alpha * (0.4 + 0.6 * k.depth);
+
+    if (k.sp.pulse) {
+      const b = spine[1], gr = k.len * 0.45 * (1 + 0.1 * Math.sin(k.flap));
+      const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, gr);
+      g.addColorStop(0, rgb(k.look.glow));
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.globalAlpha = theme.glow * fade * dimAt(b.x, b.y);
+      ctx.fillStyle = g;
+      ctx.fillRect(b.x - gr, b.y - gr, gr * 2, gr * 2);
+    }
+
+    for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
+      const x = c * cw + cw / 2, y = r * chh + chh / 2;
+      const { t, off } = locate(k, spine, x, y);
+      const hit = shape(k, t, off, Math.abs(off), c, r);
+      if (!hit) continue;
+      occupied[r * cols + c] = 1;
+      const a = fade * hit[2] * dimAt(x, y), col = rgb(hit[1]);
+      if (hit[3]) { ctx.globalAlpha = a * 0.45; ctx.fillStyle = col; ctx.fillRect(c * cw + 0.5, r * chh + 0.5, cw - 1, chh - 1); }
+      put(c, r, hit[0], col, a);
+    }
+  }
+
+  function dimAt(x, y) {
+    let m = 1;
+    for (const b of avoid) {
+      const d = Math.hypot(Math.max(b.l - x, 0, x - b.r), Math.max(b.t - y, 0, y - b.b));
+      if (d < 40) m = Math.min(m, 0.15 + 0.85 * (d / 40));
+    }
+    return m;
+  }
+
+  function render(dt) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.font = `500 ${Math.round(chh * 0.78)}px "JetBrains Mono", ui-monospace, Menlo, monospace`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    occupied.fill(0);
+
+    for (const k of [...fish].sort((a, b) => a.depth - b.depth)) drawFish(k);
+
+    if (mouse.on) { const i = cellAt(mouse.x, mouse.y); if (i >= 0) wake[i] = Math.min(1.5, wake[i] + 0.1); }
+    const decay = Math.exp(-dt * 1.1);
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      const i = r * cols + c;
+      const l = wake[c > 0 ? i - 1 : i], rt = wake[c < cols - 1 ? i + 1 : i];
+      const u = wake[r > 0 ? i - cols : i], d = wake[r < rows - 1 ? i + cols : i];
+      wakeTmp[i] = (wake[i] * 4 + l + rt + u + d) / 8 * decay;
+    }
+    [wake, wakeTmp] = [wakeTmp, wake];
+    const water = rgb(theme.water);
+    for (let i = 0; i < wake.length; i++) {
+      if (wake[i] < 0.2 || occupied[i]) continue;
+      put(i % cols, (i / cols) | 0, wake[i] > 0.5 ? '≈' : '·', water, Math.min(1, wake[i] - 0.2) * 0.35);
+    }
+
+    // Ripples: dotted rings that widen and fade.
+    for (const rp of ripples) {
+      const age = time - rp.t, life = 2.5 + rp.s * 1.5;
+      const rad = age * 50 * (0.7 + rp.s * 0.5);
+      if (rad < 3) continue;
+      const a = (1 - age / life) ** 1.5 * rp.s * 0.7;
+      const n = Math.ceil((TAU * rad) / cw);
+      for (let s = 0; s < n; s++) {
+        const ang = (s / n) * TAU, i = cellAt(rp.x + Math.cos(ang) * rad, rp.y + Math.sin(ang) * rad * 0.8);
+        if (i < 0 || occupied[i]) continue;
+        put(i % cols, (i / cols) | 0, s % 2 ? '·' : '○', water, a);
+      }
+    }
+
+    const fc = rgb(theme.food);
+    for (const f of food) {
+      const age = time - f.t;
+      const i = cellAt(f.x, f.landed ? f.y : f.y - (1 - age / f.land) * chh * 1.5);
+      if (i < 0 || occupied[i]) continue;
+      const sink = clamp((age - 9) / 5, 0, 1);
+      put(i % cols, (i / cols) | 0, !f.landed ? '·' : sink > 0.5 ? '.' : '•', fc, theme.alpha * (1 - 0.8 * sink));
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // ── loop & input ─────────────────────────────────────────
+  let last = performance.now(), acc = 0, frame = 0;
+  function loop(now) {
+    const dt = Math.min(0.1, (now - last) / 1000); last = now;
+    acc += dt;
+    let n = 0;
+    while (acc >= 1 / 60 && n++ < 4) { step(1 / 60); acc -= 1 / 60; }
+    if (n >= 4) acc = 0;
+    if (++frame % 30 === 0) measure();
+    render(dt);
+    requestAnimationFrame(loop);
+  }
+
+  addEventListener('pointermove', (e) => {
+    const el = Math.max(1, e.timeStamp - mouse.t) / 1000;
+    mouse.speed = lerp(mouse.speed, Math.min(5000, Math.hypot(e.clientX - mouse.x, e.clientY - mouse.y) / el), 0.5);
+    mouse.t = e.timeStamp; mouse.x = e.clientX; mouse.y = e.clientY;
+    mouse.on = e.pointerType !== 'touch';
+  }, { passive: true });
+  document.documentElement.addEventListener('pointerleave', () => { mouse.on = false; });
+  addEventListener('click', (e) => {
+    if (e.target.closest('a, button, input, textarea, select, label')) return;
+    if (getSelection().toString()) return;
+    feed(e.clientX, e.clientY);
+  });
+
+  const themeBtn = document.getElementById('theme');
+  function setTheme(name) {
+    document.documentElement.dataset.theme = name;
+    theme = THEMES[name];
+    themeBtn.setAttribute('aria-label', name === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+    try { localStorage.setItem('pond-theme-v2', name); } catch {}
+    if (reduceMotion.matches && W) render(1 / 60);
+  }
+  themeBtn.addEventListener('click', () => setTheme(theme === THEMES.dark ? 'light' : 'dark'));
+  let saved = null;
+  try { saved = localStorage.getItem('pond-theme-v2'); } catch {}
+  setTheme(saved || 'dark');
+
+  addEventListener('resize', () => { resize(); if (reduceMotion.matches) render(1 / 60); });
+  resize();
+  if (reduceMotion.matches) {
+    for (let i = 0; i < 240; i++) step(1 / 60);
+    render(1 / 60);
+  } else requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
